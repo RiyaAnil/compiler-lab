@@ -5,25 +5,42 @@ int yylex(void);
 void yyerror(const char *s);
 %}
 
-%token WHILE ID NUM EQ LE GE NE INC DEC INVALID
+%token WHILE IF ELSE BREAK CONTINUE
+%token ID NUM EQ LE GE NE INC DEC INVALID
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 %%
-stmt : WHILE '(' cond ')' body
-       { printf("Valid WHILE statement\n"); }
-     ;
+program : stmt
+        ;
 
-body : ';'
-     | '{' '}'
+stmt : WHILE '(' cond ')' stmt
+     | '{' stmt_list '}'
      | ID '=' expr ';'
      | ID INC ';'
      | ID DEC ';'
-     | stmt
+     | BREAK ';'
+     | CONTINUE ';'
+     | ';'
+     | IF '(' cond ')' stmt %prec LOWER_THAN_ELSE
+     | IF '(' cond ')' stmt ELSE stmt
      ;
+
+stmt_list : stmt_list stmt
+          | /* empty */
+          ;
 
 cond : expr relop expr
+     | expr
      ;
 
-relop : '<' | '>' | EQ | LE | GE | NE;
+relop : '<'
+      | '>'
+      | EQ
+      | LE
+      | GE
+      | NE
+      ;
 
 expr : expr '+' term
      | expr '-' term
@@ -32,11 +49,13 @@ expr : expr '+' term
 
 term : term '*' factor
      | term '/' factor
+     | term '%' factor
      | factor
      ;
 
 factor : ID
        | NUM
+       | '(' expr ')'
        ;
 %%
 
@@ -45,7 +64,8 @@ void yyerror(const char *s) {
 }
 
 int main() {
-    printf("Enter a WHILE statement: ");
-    yyparse();
+    printf("Enter a WHILE statement:\n");
+    if (yyparse() == 0)
+        printf("Valid WHILE statement\n");
     return 0;
 }
