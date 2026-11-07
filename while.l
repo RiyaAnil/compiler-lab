@@ -5,6 +5,10 @@
 
 %%
 "while"                 return WHILE;
+"if"                    return IF;
+"else"                  return ELSE;
+"break"                 return BREAK;
+"continue"              return CONTINUE;
 [a-zA-Z_][a-zA-Z0-9]*   return ID;
 [0-9]+                  return NUM;
 "=="                    return EQ;
@@ -13,9 +17,9 @@
 "!="                    return NE;
 "++"                    return INC;
 "--"                    return DEC;
-[=<>+\-*/]              return yytext[0];
+[=<>+\-*/%]             return yytext[0];
 [();{}]                 return yytext[0];
-[ \t\n]+                ;
+[ \t\r\n]+              ;
 .                       return INVALID;
 %%
 
