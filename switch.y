@@ -5,29 +5,53 @@ int yylex(void);
 void yyerror(const char *s);
 %}
 
-%token SWITCH CASE DEFAULT BREAK ID NUM INVALID
+%token SWITCH CASE DEFAULT BREAK CONTINUE
+%token ID NUM EQ NE LE GE INVALID
 
 %%
-stmt : SWITCH '(' ID ')' '{' cases default_opt '}'
-       { printf("Valid SWITCH statement\n"); }
-     ;
+program : SWITCH '(' expr ')' '{' cases default_opt '}'
+          { /* Valid switch structure */ }
+        ;
 
-cases : cases CASE NUM ':' statements
+cases : cases case_block
       | /* empty */
       ;
 
-default_opt : DEFAULT ':' statements
+case_block : CASE const_value ':' stmt_list
+           ;
+
+default_opt : DEFAULT ':' stmt_list
             | /* empty */
             ;
 
-statements : statements statement
-           | /* empty */
-           ;
+const_value : NUM
+            | '-' NUM
+            ;
 
-statement : BREAK ';'
-          | ID '=' NUM ';'
-          | ';'
+stmt_list : stmt_list stmt
+          | /* empty */
           ;
+
+stmt : ID '=' expr ';'
+     | BREAK ';'
+     | CONTINUE ';'
+     | ';'
+     ;
+
+expr : expr '+' term
+     | expr '-' term
+     | term
+     ;
+
+term : term '*' factor
+     | term '/' factor
+     | factor
+     ;
+
+factor : ID
+       | NUM
+       | '(' expr ')'
+       ;
 %%
 
 void yyerror(const char *s) {
@@ -36,6 +60,7 @@ void yyerror(const char *s) {
 
 int main() {
     printf("Enter a SWITCH statement:\n");
-    yyparse();
+    if (yyparse() == 0)
+        printf("Valid SWITCH statement\n");
     return 0;
 }
