@@ -8,7 +8,12 @@ void yyerror(const char *s);
 %token FOR ID NUM INC DEC EQ NE LE GE INVALID
 
 %%
-program : FOR '(' init ';' cond ';' update ')' stmt
+
+program : /* empty */
+        | program statement
+        ;
+        
+statement : FOR '(' init ';' cond ';' update ')' stmt
           { printf("Valid FOR statement\n"); }
         ;
 
@@ -65,7 +70,6 @@ void yyerror(const char *s) {
 
 int main() {
     printf("Enter a FOR statement:\n");
-    if (yyparse() == 0)
-        printf("Valid FOR statement\n");
+    yyparse();
     return 0;
 }

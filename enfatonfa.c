@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <string.h>
 
@@ -13,16 +12,22 @@ void dfs(int start, int state) {
     visited[state] = 1;
     closure[start][state] = 1;
 
-    for (int j = 0; j < n; j++)
+    for (int j = 0; j < n; j++) {
         if (eps[state][j] && !visited[j])
             dfs(start, j);
+    }
 }
 
 int main() {
-    int i, j;
+    int i, j, k, l;
 
     printf("Enter number of states: ");
     scanf("%d", &n);
+
+    if (n < 1 || n > 10) {
+        printf("Number of states must be between 1 and 10.\n");
+        return 1;
+    }
 
     printf("Enter epsilon transition matrix (%d x %d):\n", n, n);
     for (i = 0; i < n; i++)
@@ -43,55 +48,79 @@ int main() {
     for (i = 0; i < n; i++)
         scanf("%d", &isFinal[i]);
 
+    /* Calculate epsilon closure of every state */
     for (i = 0; i < n; i++) {
         memset(visited, 0, sizeof(visited));
         dfs(i, i);
     }
 
-    for (i = 0; i < n; i++)
-        for (j = 0; j < n; j++)
+    /* Calculate new final states */
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
             if (closure[i][j] && isFinal[j])
                 newFinal[i] = 1;
+        }
+    }
 
-    int newA[10][10] = {0}, newB[10][10] = {0};
+    int newA[10][10] = {0};
+    int newB[10][10] = {0};
 
+    /* Calculate transitions without epsilon */
     for (i = 0; i < n; i++) {
-        for (int k = 0; k < n; k++) {
+        for (k = 0; k < n; k++) {
             if (closure[i][k]) {
                 for (j = 0; j < n; j++) {
-                    if (moveA[k][j])
-                        newA[i][j] = 1;
-                    if (moveB[k][j])
-                        newB[i][j] = 1;
+
+                    if (moveA[k][j]) {
+                        for (l = 0; l < n; l++) {
+                            if (closure[j][l])
+                                newA[i][l] = 1;
+                        }
+                    }
+
+                    if (moveB[k][j]) {
+                        for (l = 0; l < n; l++) {
+                            if (closure[j][l])
+                                newB[i][l] = 1;
+                        }
+                    }
                 }
             }
         }
     }
 
+    /* Display the new transition table */
     printf("\n--- NFA without epsilon transitions ---\n");
     printf("\nNew Transition Table:\n");
     printf("State\ta\tb\n");
 
     for (i = 0; i < n; i++) {
-        printf("q%d\t{ ", i);
-        for (j = 0; j < n; j++)
+        printf("q%d\t{", i);
+
+        for (j = 0; j < n; j++) {
             if (newA[i][j])
-                printf("q%d ", j);
+                printf(" q%d", j);
+        }
 
-        printf("}\t{ ");
-        for (j = 0; j < n; j++)
+        printf(" }\t{");
+
+        for (j = 0; j < n; j++) {
             if (newB[i][j])
-                printf("q%d ", j);
+                printf(" q%d", j);
+        }
 
-        printf("}\n");
+        printf(" }\n");
     }
 
-    printf("\nNew Final States: { ");
-    for (i = 0; i < n; i++)
-        if (newFinal[i])
-            printf("q%d ", i);
+    /* Display the new final states */
+    printf("\nNew Final States: {");
 
-    printf("}\n");
+    for (i = 0; i < n; i++) {
+        if (newFinal[i])
+            printf(" q%d", i);
+    }
+
+    printf(" }\n");
 
     return 0;
 }

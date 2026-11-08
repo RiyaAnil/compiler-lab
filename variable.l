@@ -5,6 +5,12 @@
 
 %%
 [a-zA-Z][a-zA-Z0-9]*  return VALID;
-.|\n                   return INVALID;
+[ \t]+                ;
+\n                    return 0;
+.                     return INVALID;
 %%
-int yywrap() { return 1; }
+
+int yywrap() {
+    return 1;
+}
+

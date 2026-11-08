@@ -6,7 +6,7 @@
 
 %%
 [0-9]+ {
-    yylval = atoi(yytext);
+    yylval.num = atoi(yytext);
     return NUMBER;
 }
 [ \t\n]+ ;

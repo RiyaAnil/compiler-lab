@@ -11,7 +11,7 @@ void yyerror(const char *s);
 %left UMINUS
 
 %%
-input : expr '\n' { printf("Result = %d\n", $1); }
+input : expr '\n' { printf("Result = %d\n", $1); return 0;}
       ;
 
 expr  : expr '+' expr { $$ = $1 + $3; }

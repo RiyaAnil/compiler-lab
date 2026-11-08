@@ -33,12 +33,16 @@ int main()
 
     printf("Enter the no of three address statements:\n");
     scanf("%d", &n);
+    getchar();
 
     printf("Enter the three address code:\n");
 
     for (i = 0; i < n; i++)
-        scanf(" %[^\n]", tac[i]);
-
+    {
+    	fgets(tac[i], sizeof(tac[i]), stdin);
+    	tac[i][strcspn(tac[i], "\n")] = '\0';
+    }
+    
     for (i = 0; i < n; i++)
     {
         if (sscanf(tac[i], "if %s %s %s goto %s",
