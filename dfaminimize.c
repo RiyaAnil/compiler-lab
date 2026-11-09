@@ -1,22 +1,14 @@
-
 #include <stdio.h>
 
 int main() {
-    int n, sym, start;
-    int trans[10][5], isFinal[10];
-    int group[10], newGroup[10];
-    int i, j, k, g;
+    int n, sym, start, trans[10][5], isFinal[10];
+    int reachable[10] = {0}, group[10], newGroup[10], queue[10];
+    int i, j, k, g, front = 0, rear = 0, changed, numGroups;
 
     printf("Enter number of states: ");
     scanf("%d", &n);
-
     printf("Enter number of input symbols: ");
     scanf("%d", &sym);
-
-    if (n < 1 || n > 10 || sym < 1 || sym > 5) {
-        printf("Invalid input\n");
-        return 1;
-    }
 
     printf("Enter transition table:\n");
     for (i = 0; i < n; i++)
@@ -30,72 +22,60 @@ int main() {
     printf("Enter start state: ");
     scanf("%d", &start);
 
-    if (start < 0 || start >= n) {
-        printf("Invalid start state\n");
-        return 1;
+    queue[rear++] = start;
+    reachable[start] = 1;
+
+    while (front < rear) {
+        i = queue[front++];
+        for (j = 0; j < sym; j++)
+            if (!reachable[trans[i][j]]) {
+                reachable[trans[i][j]] = 1;
+                queue[rear++] = trans[i][j];
+            }
     }
 
     for (i = 0; i < n; i++)
-        for (j = 0; j < sym; j++)
-            if (trans[i][j] < 0 || trans[i][j] >= n) {
-                printf("Invalid transition\n");
-                return 1;
-            }
+        group[i] = reachable[i] ? isFinal[i] : -1;
 
-    for (i = 0; i < n; i++)
-        group[i] = isFinal[i];
-
-    while (1) {
-        int numGroups = 0;
+    do {
+        numGroups = changed = 0;
 
         for (i = 0; i < n; i++) {
-            int found = -1;
+            newGroup[i] = -1;
+            if (!reachable[i]) continue;
 
             for (j = 0; j < i; j++) {
-                if (group[i] != group[j])
-                    continue;
+                if (!reachable[j] || group[i] != group[j]) continue;
 
-                int same = 1;
+                for (k = 0; k < sym &&
+                     group[trans[i][k]] == group[trans[j][k]]; k++);
 
-                for (k = 0; k < sym; k++) {
-                    if (group[trans[i][k]] !=
-                        group[trans[j][k]]) {
-                        same = 0;
-                        break;
-                    }
-                }
-
-                if (same) {
-                    found = newGroup[j];
+                if (k == sym) {
+                    newGroup[i] = newGroup[j];
                     break;
                 }
             }
 
-            if (found == -1)
+            if (newGroup[i] == -1)
                 newGroup[i] = numGroups++;
-            else
-                newGroup[i] = found;
         }
 
-        int changed = 0;
-
         for (i = 0; i < n; i++)
-            for (j = 0; j < i; j++)
-                if ((group[i] == group[j]) !=
-                    (newGroup[i] == newGroup[j]))
-                    changed = 1;
+            if (reachable[i])
+                for (j = 0; j < i; j++)
+                    if (reachable[j] &&
+                        ((group[i] == group[j]) !=
+                         (newGroup[i] == newGroup[j])))
+                        changed = 1;
 
         for (i = 0; i < n; i++)
             group[i] = newGroup[i];
 
-        if (!changed)
-            break;
-    }
+    } while (changed);
 
-    int numGroups = 0;
-
+    numGroups = 0;
     for (i = 0; i < n; i++)
-        if (group[i] + 1 > numGroups)
+        if (reachable[i] && group[i] >= numGroups)
             numGroups = group[i] + 1;
 
     printf("\n--- Minimized DFA States ---\n");
@@ -103,47 +83,30 @@ int main() {
 
     for (g = 0; g < numGroups; g++) {
         int final = 0;
-
         printf("S%d = { ", g);
 
-        for (i = 0; i < n; i++) {
-            if (group[i] == g) {
+        for (i = 0; i < n; i++)
+            if (reachable[i] && group[i] == g) {
                 printf("q%d ", i);
-
-                if (isFinal[i])
-                    final = 1;
+                if (isFinal[i]) final = 1;
             }
-        }
 
         printf("}%s\n", final ? " [FINAL]" : "");
     }
 
-    printf("\n--- Minimized Transition Table ---\n");
-    printf("State");
-
-    for (j = 0; j < sym; j++)
-        printf("\tsym%d", j);
-
+    printf("\n--- Minimized Transition Table ---\nState");
+    for (j = 0; j < sym; j++) printf("\tsym%d", j);
     printf("\n");
 
     for (g = 0; g < numGroups; g++) {
-        int rep = -1;
-
-        for (i = 0; i < n; i++)
-            if (group[i] == g) {
-                rep = i;
-                break;
-            }
+        for (i = 0; i < n && (!reachable[i] || group[i] != g); i++);
 
         printf("S%d", g);
-
         for (j = 0; j < sym; j++)
-            printf("\tS%d", group[trans[rep][j]]);
-
+            printf("\tS%d", group[trans[i][j]]);
         printf("\n");
     }
 
     printf("\nStart state: S%d\n", group[start]);
-
     return 0;
 }
