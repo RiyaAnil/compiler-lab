@@ -54,7 +54,7 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    NUMBER = 258                   /* NUMBER  */
+    ID = 258                       /* ID  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -63,16 +63,16 @@ extern int yydebug;
 #define YYEOF 0
 #define YYerror 256
 #define YYUNDEF 257
-#define NUMBER 258
+#define ID 258
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 41 "ast.y"
+#line 37 "ast.y"
 
-    int num;
-    Node *node;
+    char *str;
+    struct Node *node;
 
 #line 78 "y.tab.h"
 

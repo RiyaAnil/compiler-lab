@@ -2,74 +2,87 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-
-int yylex(void);
-void yyerror(const char *s);
+#include <string.h>
 
 typedef struct Node {
-    char value[20];
+    char *value;
     struct Node *left, *right;
 } Node;
 
-Node *makeNode(char *value, Node *l, Node *r) {
+Node *root;
+
+Node *create(char *v, Node *l, Node *r) {
     Node *n = malloc(sizeof(Node));
-    snprintf(n->value, sizeof(n->value), "%s", value);
+    n->value = strdup(v);
     n->left = l;
     n->right = r;
     return n;
 }
 
-Node *makeNum(int n) {
-    char s[20];
-    snprintf(s, sizeof(s), "%d", n);
-    return makeNode(s, NULL, NULL);
+void print(Node *n, int level) {
+    if (!n) return;
+
+    for (int i = 0; i < level; i++)
+        printf(" ");
+
+    printf("%s\n", n->value);
+    print(n->left, level + 1);
+    print(n->right, level + 1);
 }
 
-void printTree(Node *n, int level) {
-    int i;
-    if (!n) return;
-    for (i = 0; i < level; i++) printf("  ");
-    printf("%s\n", n->value);
-    printTree(n->left, level + 1);
-    printTree(n->right, level + 1);
-}
+int yylex(void);
+int yyerror(const char *s);
 %}
 
 %union {
-    int num;
-    Node *node;
+    char *str;
+    struct Node *node;
 }
 
-%token <num> NUMBER
+%token <str> ID
 %type <node> E T F
+
 %left '+' '-'
 %left '*' '/'
 
 %%
-input : E { printf("Abstract Syntax Tree:\n"); printTree($1, 0); }
-      ;
 
-E : E '+' T { $$ = makeNode("+", $1, $3); }
-  | E '-' T { $$ = makeNode("-", $1, $3); }
-  | T       { $$ = $1; }
-  ;
+input:
+    E'\n' { root = $1; }
+    ;
 
-T : T '*' F { $$ = makeNode("*", $1, $3); }
-  | T '/' F { $$ = makeNode("/", $1, $3); }
-  | F       { $$ = $1; }
-  ;
+E:
+      E '+' T { $$ = create("+", $1, $3); }
+    | E '-' T { $$ = create("-", $1, $3); }
+    | T       { $$ = $1; }
+    ;
 
-F : '(' E ')' { $$ = $2; }
-  | NUMBER    { $$ = makeNum($1); }
-  ;
+T:
+      T '*' F { $$ = create("*", $1, $3); }
+    | T '/' F { $$ = create("/", $1, $3); }
+    | F       { $$ = $1; }
+    ;
+
+F:
+      '(' E ')' { $$ = $2; }
+    | ID        { $$ = create($1, NULL, NULL); }
+    ;
+
 %%
-
-void yyerror(const char *s) {
-    printf("Invalid expression\n");
-}
 
 int main() {
     printf("Enter expression: ");
-    yyparse();
+
+    if (yyparse() == 0) {
+        printf("\nAbstract Syntax Tree:\n");
+        print(root, 0);
+    }
+
     return 0;
 }
+
+int yyerror(const char *s) {
+    printf("Invalid expression\n");
+    return 0;
+}
+
